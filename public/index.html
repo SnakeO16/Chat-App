@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>1-on-1 Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+    #status {
+      margin-bottom: 20px;
+      font-size: 1.2em;
+    }
+    #chat {
+      display: none;
+      width: 100%;
+      max-width: 500px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    #messages {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    #messages div {
+      margin-bottom: 8px;
+    }
+    #controls {
+      display: flex;
+      gap: 10px;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+    }
+    button {
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="status">Connecting...</div>
+  <div id="chat">
+    <div id="messages"></div>
+    <div id="controls">
+      <input id="input" autocomplete="off" placeholder="Type a message..." />
+      <button onclick="send()">Send</button>
+      <button onclick="skip()">Skip</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let currentRoom = null;
+    const statusDiv = document.getElementById('status');
+    const chatDiv = document.getElementById('chat');
+    const messagesDiv = document.getElementById('messages');
+    const input = document.getElementById('input');
+
+    socket.on('connect', () => {
+      statusDiv.textContent = 'Waiting for a partner...';
+    });
+
+    socket.on('waiting', () => {
+      currentRoom = null;
+      chatDiv.style.display = 'none';
+      statusDiv.textContent = 'Waiting for a partner...';
+    });
+
+    socket.on('match', ({ room }) => {
+      currentRoom = room;
+      messagesDiv.innerHTML = '';
+      chatDiv.style.display = 'block';
+      statusDiv.textContent = 'You are now connected.';
+    });
+
+    socket.on('chat message', (msg) => {
+      const div = document.createElement('div');
+      div.textContent = `Stranger: ${msg}`;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+    socket.on('partner disconnected', () => {
+      currentRoom = null;
+      const div = document.createElement('div');
+      div.textContent = 'Partner disconnected.';
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      chatDiv.style.display = 'none';
+      statusDiv.textContent = 'Partner disconnected. Waiting for a new match...';
+    });
+
+    function send() {
+      if (!currentRoom) return;
+      const msg = input.value.trim();
+      if (!msg) return;
+      socket.emit('chat message', { room: currentRoom, msg });
+      const div = document.createElement('div');
+      div.textContent = `You: ${msg}`;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      input.value = '';
+    }
+
+    function skip() {
+      socket.emit('skip');
+      chatDiv.style.display = 'none';
+      statusDiv.textContent = 'Skipping... finding a new match.';
+    }
+  </script>
+</body>
+</html>
