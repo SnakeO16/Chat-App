@@ -3,19 +3,65 @@ const path = require('path');
 const http = require('http');
 const socketIO = require('socket.io');
 
+const db = require('./db');
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
+app.use(express.json());
+
+// API route to check if email exists
+app.post('/api/check-email', (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ exists: false });
+  db.get('SELECT * FROM users WHERE email = ?', [email], (err, row) => {
+    if (err) return res.status(500).json({ exists: false });
+    res.json({ exists: !!row });
+  });
+});
+
+// API endpoint to register a new user
+app.post('/api/register', async (req, res) => {
+  const { username, email } = req.body;
+  if (!username || !email) {
+    return res.status(400).json({ success: false, error: 'Username and email required.' });
+  }
+  // Simple email validation
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    return res.status(400).json({ success: false, error: 'Invalid email format.' });
+  }
+  try {
+    // Check if email already exists
+    db.get('SELECT * FROM users WHERE email = ?', [email], (err, row) => {
+      if (err) {
+        return res.status(500).json({ success: false, error: 'Database error.' });
+      }
+      if (row) {
+        return res.status(409).json({ success: false, error: 'Email already registered.' });
+      }
+      // Insert new user
+      db.run('INSERT INTO users (username, email) VALUES (?, ?)', [username, email], function(err) {
+        if (err) {
+          return res.status(500).json({ success: false, error: 'Database error.' });
+        }
+        return res.json({ success: true });
+      });
+    });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: 'Server error.' });
+  }
+});
+
 
 const PORT = 4000;
 
 
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Redirect root to username.html
+// Redirect root to username.html (must be before static middleware)
 app.get('/', (req, res) => {
-  res.redirect('/username.html');
+  res.sendFile(path.join(__dirname, 'public', 'username.html'));
 });
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 let waitingUser = null;
 const userRooms = new Map();

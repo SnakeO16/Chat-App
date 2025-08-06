@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ...existing head content... -->
+  <meta charset="UTF-8" />
+  <title>1-on-1 Chat</title>
+  <style>
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #chat {
+      display: none;
+      background: #fff;
+      padding: 40px 32px 32px 32px;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      text-align: center;
+      min-width: 320px;
+      max-width: 400px;
+    }
+    #status {
+      margin-bottom: 24px;
+      font-size: 1.2em;
+      color: #0078d7;
+      font-weight: 500;
+    }
+    #messages {
+      height: 220px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      padding: 12px;
+      margin-bottom: 18px;
+      background: #fafafa;
+      border-radius: 8px;
+      text-align: left;
+    }
+    #messages div {
+      margin-bottom: 10px;
+      font-size: 1em;
+      color: #333;
+    }
+    #controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1em;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      border-color: #0078d7;
+      outline: none;
+    }
+    button {
+      background: #0078d7;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 24px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <div style="position:absolute;top:24px;left:24px;z-index:10;">
+    <button id="backToLogin" title="Back to Login" style="background:none;border:none;cursor:pointer;padding:0;">
+      <span style="font-size:2em;color:#0078d7;">&#8592;</span>
+    </button>
+  </div>
+  <script>
+    document.getElementById('backToLogin').onclick = function() {
+      localStorage.removeItem('chatUsername');
+      window.location.href = 'username.html';
+    };
+    const username = localStorage.getItem("chatUsername");
+    if (!username) {
+      window.location.replace("username.html");
+    }
+  </script>
+  <div id="status">Connecting...</div>
+  <div id="chat">
+    <div id="messages"></div>
+    <div id="controls">
+      <input id="input" autocomplete="off" placeholder="Type a message..." />
+      <button onclick="send()">Send</button>
+      <button onclick="skip()">Skip</button>
+      <input type="file" id="fileInput" style="display:none;" />
+      <button onclick="document.getElementById('fileInput').click()" title="Attach file">📎</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let currentRoom = null;
+    const statusDiv = document.getElementById('status');
+    const chatDiv = document.getElementById('chat');
+    const messagesDiv = document.getElementById('messages');
+    const input = document.getElementById('input');
+
+    socket.on('connect', () => {
+      statusDiv.textContent = 'Waiting for a partner...';
+    });
+
+    socket.on('waiting', () => {
+      currentRoom = null;
+      chatDiv.style.display = 'none';
+      statusDiv.textContent = 'Waiting for a partner...';
+    });
+
+    socket.on('match', ({ room }) => {
+      currentRoom = room;
+      messagesDiv.innerHTML = '';
+      chatDiv.style.display = 'block';
+      statusDiv.textContent = 'You are now connected.';
+    });
+
+    socket.on('chat message', (msg) => {
+      const div = document.createElement('div');
+      div.textContent = `Stranger: ${msg}`;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+    socket.on('chat attachment', ({ name, type, data }) => {
+      displayAttachment('Stranger', name, type, data);
+    });
+
+    const fileInput = document.getElementById('fileInput');
+    fileInput.onchange = function() {
+      if (!currentRoom || !fileInput.files.length) return;
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = e.target.result;
+        socket.emit('chat attachment', {
+          room: currentRoom,
+          name: file.name,
+          type: file.type,
+          data
+        });
+        displayAttachment('You', file.name, file.type, data);
+      };
+      reader.readAsDataURL(file);
+      fileInput.value = '';
+    };
+
+    function displayAttachment(sender, name, type, data) {
+      const div = document.createElement('div');
+      if (type.startsWith('image/')) {
+        div.innerHTML = `<strong>${sender}:</strong> <img src="${data}" alt="${name}" style="max-width:180px;max-height:180px;border-radius:8px;vertical-align:middle;" />`;
+      } else {
+        div.innerHTML = `<strong>${sender}:</strong> <a href="${data}" download="${name}" style="color:#0078d7;">${name}</a>`;
+      }
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    socket.on('partner disconnected', () => {
+      currentRoom = null;
+      const div = document.createElement('div');
+      div.textContent = 'Partner disconnected.';
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      chatDiv.style.display = 'none';
+      statusDiv.textContent = 'Partner disconnected. Waiting for a new match...';
+    });
+
+    function send() {
+      if (!currentRoom) return;
+      const msg = input.value.trim();
+      if (!msg) return;
+      socket.emit('chat message', { room: currentRoom, msg });
+      const div = document.createElement('div');
+      div.textContent = `You: ${msg}`;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      input.value = '';
+    }
+
+    function skip() {
+      socket.emit('skip');
+      chatDiv.style.display = 'none';
+      statusDiv.textContent = 'Skipping... finding a new match.';
+    }
+  </script>
+</body>
+</html>

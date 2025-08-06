@@ -73,17 +73,44 @@
     <form id="username-form">
       <label for="username-input">Username</label>
       <input type="text" id="username-input" required placeholder="Your name..." />
+      <label for="email-input">Email</label>
+      <input type="email" id="email-input" required placeholder="Your email..." />
       <button type="submit">Join Chat</button>
+      <button type="button" id="createAccountBtn" style="margin-top:12px;background:#fff;color:#0078d7;border:1px solid #0078d7;">Create Account</button>
     </form>
   </div>
   <script>
+    document.getElementById('createAccountBtn').onclick = function() {
+      window.location.href = 'create-account.html';
+    };
     const form = document.getElementById("username-form");
-    form.addEventListener("submit", e => {
+    form.addEventListener("submit", async e => {
       e.preventDefault();
       const username = document.getElementById("username-input").value.trim();
-      if (username) {
+      const email = document.getElementById("email-input").value.trim();
+      if (!username || !email) return;
+      // Simple email validation
+      if (!/^\S+@\S+\.\S+$/.test(email)) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+      // Check email against database
+      try {
+        const res = await fetch("/api/check-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.exists) {
+          alert("Email not registered. Please use a registered email.");
+          return;
+        }
+        // Save username to localStorage
         localStorage.setItem("chatUsername", username);
-        window.location.href = "chat.html"; // Replace with your chat page filename
+        window.location.href = "chat.html";
+      } catch (err) {
+        alert("Network error. Please try again.");
       }
     });
   </script>
