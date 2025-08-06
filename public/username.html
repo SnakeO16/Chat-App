@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Welcome to Chat App</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      padding: 40px 32px 32px 32px;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      text-align: center;
+      min-width: 320px;
+    }
+    h1 {
+      color: #0078d7;
+      margin-bottom: 12px;
+      font-size: 2.2em;
+    }
+    p {
+      color: #444;
+      margin-bottom: 24px;
+      font-size: 1.1em;
+    }
+    label {
+      font-size: 1em;
+      color: #333;
+      margin-bottom: 8px;
+      display: block;
+    }
+    input[type="text"] {
+      padding: 10px;
+      width: 80%;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 18px;
+      font-size: 1em;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus {
+      border-color: #0078d7;
+      outline: none;
+    }
+    button {
+      background: #0078d7;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 24px;
+      font-size: 1em;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>👋 Welcome!</h1>
+    <p>Enter your username to join the chat and connect with people around the world.</p>
+    <form id="username-form">
+      <label for="username-input">Username</label>
+      <input type="text" id="username-input" required placeholder="Your name..." />
+      <button type="submit">Join Chat</button>
+    </form>
+  </div>
+  <script>
+    const form = document.getElementById("username-form");
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const username = document.getElementById("username-input").value.trim();
+      if (username) {
+        localStorage.setItem("chatUsername", username);
+        window.location.href = "chat.html"; // Replace with your chat page filename
+      }
+    });
+  </script>
+</body>
+</html>

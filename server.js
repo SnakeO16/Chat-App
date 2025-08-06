@@ -7,9 +7,15 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-const PORT = 3000;
+const PORT = 4000;
+
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Redirect root to username.html
+app.get('/', (req, res) => {
+  res.redirect('/username.html');
+});
 
 let waitingUser = null;
 const userRooms = new Map();
@@ -70,5 +76,5 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:4000`);
 });

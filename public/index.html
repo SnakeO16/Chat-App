@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- ...existing head content... -->
   <meta charset="UTF-8" />
   <title>1-on-1 Chat</title>
   <style>
@@ -49,6 +50,12 @@
   </style>
 </head>
 <body>
+  <script>
+    const username = localStorage.getItem("chatUsername");
+    if (!username) {
+      window.location.replace("username.html");
+    }
+  </script>
   <div id="status">Connecting...</div>
   <div id="chat">
     <div id="messages"></div>
