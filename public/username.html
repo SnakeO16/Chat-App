@@ -1,118 +1,269 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Welcome to Chat App</title>
-  <style>
-    body {
-      background: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);
-      font-family: 'Segoe UI', Arial, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .container {
-      background: #fff;
-      padding: 40px 32px 32px 32px;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-      text-align: center;
-      min-width: 320px;
-    }
-    h1 {
-      color: #0078d7;
-      margin-bottom: 12px;
-      font-size: 2.2em;
-    }
-    p {
-      color: #444;
-      margin-bottom: 24px;
-      font-size: 1.1em;
-    }
-    label {
-      font-size: 1em;
-      color: #333;
-      margin-bottom: 8px;
-      display: block;
-    }
-    input[type="text"] {
-      padding: 10px;
-      width: 80%;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-bottom: 18px;
-      font-size: 1em;
-      transition: border-color 0.2s;
-    }
-    input[type="text"]:focus {
-      border-color: #0078d7;
-      outline: none;
-    }
-    button {
-      background: #0078d7;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 10px 24px;
-      font-size: 1em;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background 0.2s;
-    }
-    button:hover {
-      background: #005fa3;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConnectChat - Login</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-header {
+            margin-bottom: 2rem;
+        }
+
+        .login-header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .create-account-btn {
+            width: 100%;
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .create-account-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .message {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .message.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .message.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                margin: 1rem;
+                padding: 2rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>👋 Welcome!</h1>
-    <p>Enter your username to join the chat and connect with people around the world.</p>
-    <form id="username-form">
-      <label for="username-input">Username</label>
-      <input type="text" id="username-input" required placeholder="Your name..." />
-      <label for="email-input">Email</label>
-      <input type="email" id="email-input" required placeholder="Your email..." />
-      <button type="submit">Join Chat</button>
-      <button type="button" id="createAccountBtn" style="margin-top:12px;background:#fff;color:#0078d7;border:1px solid #0078d7;">Create Account</button>
-    </form>
-  </div>
-  <script>
-    document.getElementById('createAccountBtn').onclick = function() {
-      window.location.href = 'create-account.html';
-    };
-    const form = document.getElementById("username-form");
-    form.addEventListener("submit", async e => {
-      e.preventDefault();
-      const username = document.getElementById("username-input").value.trim();
-      const email = document.getElementById("email-input").value.trim();
-      if (!username || !email) return;
-      // Simple email validation
-      if (!/^\S+@\S+\.\S+$/.test(email)) {
-        alert("Please enter a valid email address.");
-        return;
-      }
-      // Check email against database
-      try {
-        const res = await fetch("/api/check-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email })
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">ConnectChat</div>
+            <a href="/public/index.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Back to Home
+            </a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>Welcome Back!</h1>
+                <p>Enter your details to join the chat</p>
+            </div>
+            <form id="username-form">
+                <div class="form-group">
+                    <label for="username-input">Username</label>
+                    <input type="text" id="username-input" required placeholder="Enter your username" />
+                </div>
+                <div class="form-group">
+                    <label for="email-input">Email</label>
+                    <input type="email" id="email-input" required placeholder="Enter your email" />
+                </div>
+                <button type="submit" class="login-button">Join Chat</button>
+                <button type="button" id="createAccountBtn" class="create-account-btn">Create Account</button>
+            </form>
+            <div id="message" class="message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('createAccountBtn').onclick = function() {
+            window.location.href = 'create-account.html';
+        };
+
+        const form = document.getElementById("username-form");
+        const messageDiv = document.getElementById("message");
+        
+        form.addEventListener("submit", async e => {
+            e.preventDefault();
+            const username = document.getElementById("username-input").value.trim();
+            const email = document.getElementById("email-input").value.trim();
+            
+            if (!username || !email) return;
+            
+            // Simple email validation
+            if (!/^\S+@\S+\.\S+$/.test(email)) {
+                showMessage("Please enter a valid email address.", "error");
+                return;
+            }
+            
+            // Check email and username against database
+            try {
+                const res = await fetch("/api/check-email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, username })
+                });
+                const data = await res.json();
+                
+                if (!res.ok || !data.exists) {
+                    showMessage("Email not registered. Please create an account first.", "error");
+                    return;
+                }
+                
+                // Save username to localStorage
+                localStorage.setItem("chatUsername", username);
+                window.location.href = "chat-fixed.html";
+            } catch (err) {
+                showMessage("Network error. Please try again.", "error");
+            }
         });
-        const data = await res.json();
-        if (!res.ok || !data.exists) {
-          alert("Email not registered. Please use a registered email.");
-          return;
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
         }
-        // Save username to localStorage
-        localStorage.setItem("chatUsername", username);
-        window.location.href = "chat.html";
-      } catch (err) {
-        alert("Network error. Please try again.");
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>

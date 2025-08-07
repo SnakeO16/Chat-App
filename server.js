@@ -1,126 +1,216 @@
 const express = require('express');
-const path = require('path');
 const http = require('http');
-const socketIO = require('socket.io');
-
-const db = require('./db');
+const socketIo = require('socket.io');
+const path = require('path');
+const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server);
+const io = socketIo(server);
+
+app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// API route to check if email exists
-app.post('/api/check-email', (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ exists: false });
-  db.get('SELECT * FROM users WHERE email = ?', [email], (err, row) => {
-    if (err) return res.status(500).json({ exists: false });
-    res.json({ exists: !!row });
-  });
-});
+// Database setup
+const db = new sqlite3.Database('users.db');
 
-// API endpoint to register a new user
-app.post('/api/register', async (req, res) => {
-  const { username, email } = req.body;
-  if (!username || !email) {
-    return res.status(400).json({ success: false, error: 'Username and email required.' });
-  }
-  // Simple email validation
-  if (!/^\S+@\S+\.\S+$/.test(email)) {
-    return res.status(400).json({ success: false, error: 'Invalid email format.' });
-  }
-  try {
-    // Check if email already exists
-    db.get('SELECT * FROM users WHERE email = ?', [email], (err, row) => {
-      if (err) {
-        return res.status(500).json({ success: false, error: 'Database error.' });
-      }
-      if (row) {
-        return res.status(409).json({ success: false, error: 'Email already registered.' });
-      }
-      // Insert new user
-      db.run('INSERT INTO users (username, email) VALUES (?, ?)', [username, email], function(err) {
-        if (err) {
-          return res.status(500).json({ success: false, error: 'Database error.' });
-        }
-        return res.json({ success: true });
-      });
-    });
-  } catch (e) {
-    return res.status(500).json({ success: false, error: 'Server error.' });
-  }
-});
+// Store connected users
+const connectedUsers = new Map();
+const waitingUsers = [];
 
-
-const PORT = 4000;
-
-
-// Redirect root to username.html (must be before static middleware)
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'username.html'));
-});
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-let waitingUser = null;
-const userRooms = new Map();
-
+// Socket.io connection handling
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  console.log('New client connected:', socket.id);
 
-  const matchUser = () => {
-    if (waitingUser && waitingUser.id !== socket.id) {
-      const room = `${waitingUser.id}#${socket.id}`;
-      socket.join(room);
-      waitingUser.join(room);
+  // Get username from query parameters
+  const username = socket.handshake.query.username;
+  console.log('Socket handshake query username:', username);
+  socket.username = username || 'Anonymous';
+  console.log('Socket username:', socket.username);
 
-      userRooms.set(socket.id, room);
-      userRooms.set(waitingUser.id, room);
+  // Add to connected users
+  connectedUsers.set(socket.id, {
+    id: socket.id,
+    username: socket.username
+  });
 
-      socket.emit('match', { room });
-      waitingUser.emit('match', { room });
-
-      waitingUser = null;
+  // Handle user joining chat
+  socket.on('join-chat', () => {
+    console.log(`${socket.username} joined chat`);
+    
+    if (waitingUsers.length > 0) {
+      // Match with waiting user
+      const partner = waitingUsers.shift();
+      
+      // Create room for both users
+      const roomId = `${socket.id}-${partner.id}`;
+      socket.join(roomId);
+      partner.join(roomId);
+      
+      // Emit match event to both users
+      io.to(socket.id).emit('match', {
+        room: roomId,
+        partnerUsername: partner.username
+      });
+      
+      io.to(partner.id).emit('match', {
+        room: roomId,
+        partnerUsername: socket.username
+      });
+      
+      console.log(`Matched ${socket.username} with ${partner.username}`);
     } else {
-      waitingUser = socket;
-      socket.emit('waiting');
+      // Add to waiting list
+      waitingUsers.push(socket);
+      socket.emit('waiting', { message: 'Waiting for a partner...' });
     }
-  };
-
-  matchUser();
-
-  socket.on('chat message', ({ room, msg }) => {
-    socket.to(room).emit('chat message', msg);
   });
 
+  // Handle chat messages - updated to match client event names
+  socket.on('chat message', (data) => {
+    const roomId = Array.from(socket.rooms).find(room => room !== socket.id);
+    if (roomId) {
+      socket.to(roomId).emit('chat message', {
+        message: data.msg || data.message,
+        username: socket.username,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // Handle typing indicators - updated to match client event names
+  socket.on('typing', (data) => {
+    const roomId = Array.from(socket.rooms).find(room => room !== socket.id);
+    if (roomId) {
+      socket.to(roomId).emit('typing', { username: socket.username });
+    }
+  });
+
+  socket.on('stop typing', (data) => {
+    const roomId = Array.from(socket.rooms).find(room => room !== socket.id);
+    if (roomId) {
+      socket.to(roomId).emit('stop typing');
+    }
+  });
+
+  // Handle skip partner
   socket.on('skip', () => {
-    const room = userRooms.get(socket.id);
-    if (room) {
-      io.to(room).emit('partner disconnected');
-      io.in(room).socketsLeave(room);
-      for (const [id, r] of userRooms) {
-        if (r === room) userRooms.delete(id);
+    console.log(`${socket.username} skipped partner`);
+    
+    // Remove from any room
+    const rooms = Array.from(socket.rooms);
+    rooms.forEach(room => {
+      if (room !== socket.id) {
+        socket.to(room).emit('partner disconnected', {
+          message: 'Your partner has disconnected'
+        });
+        socket.leave(room);
       }
-    }
-    matchUser();
+    });
+    
+    // Re-add to waiting list
+    waitingUsers.push(socket);
+    socket.emit('waiting', { message: 'Finding new partner...' });
   });
 
+  // Handle report user
+  socket.on('report', (data) => {
+    console.log(`User ${socket.username} reported ${data.reason}`);
+    // In a real app, you'd store this in a database
+    socket.emit('reported', { message: 'User reported successfully' });
+  });
+
+  // Handle disconnection
   socket.on('disconnect', () => {
-    if (waitingUser === socket) {
-      waitingUser = null;
+    console.log('Client disconnected:', socket.id);
+    
+    // Remove from connected users
+    connectedUsers.delete(socket.id);
+    
+    // Remove from waiting list if present
+    const waitingIndex = waitingUsers.findIndex(s => s.id === socket.id);
+    if (waitingIndex !== -1) {
+      waitingUsers.splice(waitingIndex, 1);
     }
-    const room = userRooms.get(socket.id);
-    if (room) {
-      socket.to(room).emit('partner disconnected');
-      io.in(room).socketsLeave(room);
-      for (const [id, r] of userRooms) {
-        if (r === room) userRooms.delete(id);
+    
+    // Notify partner if in room
+    const rooms = Array.from(socket.rooms);
+    rooms.forEach(room => {
+      if (room !== socket.id) {
+        socket.to(room).emit('partner-disconnected', {
+          message: 'Your partner has disconnected'
+        });
       }
+    });
+  });
+});
+
+// Routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// API Routes for user authentication
+app.post('/api/check-email', (req, res) => {
+  const { email, username } = req.body;
+  
+  if (!email || !username) {
+    return res.status(400).json({ error: 'Email and username are required' });
+  }
+
+  // Check if user exists in database
+  const query = 'SELECT * FROM users WHERE email = ? AND username = ?';
+  db.get(query, [email, username], (err, row) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    if (row) {
+      res.json({ exists: true, user: row });
+    } else {
+      res.json({ exists: false });
     }
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:4000`);
+// API route to create new user
+app.post('/api/create-user', (req, res) => {
+  const { username, email } = req.body;
+  
+  if (!username || !email) {
+    return res.status(400).json({ error: 'Username and email are required' });
+  }
+
+  // Check if user already exists
+  const checkQuery = 'SELECT * FROM users WHERE email = ? OR username = ?';
+  db.get(checkQuery, [email, username], (err, row) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    if (row) {
+      return res.status(409).json({ error: 'User already exists' });
+    }
+    
+    // Insert new user
+    const insertQuery = 'INSERT INTO users (username, email) VALUES (?, ?)';
+    db.run(insertQuery, [username, email], function(err) {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Failed to create user' });
+      }
+      
+      res.json({ success: true, userId: this.lastID });
+    });
+  });
+});
+
+// Start server
+const PORT = process.env.PORT || 4000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://0.0.0.0:${PORT}`);
+  console.log(`Local access: http://localhost:${PORT}`);
+  console.log(`Network access: http://192.168.1.69:${PORT}`);
 });

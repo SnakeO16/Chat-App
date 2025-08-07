@@ -1,131 +1,338 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- ...existing head content... -->
-  <meta charset="UTF-8" />
-  <title>1-on-1 Chat</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 30px;
-    }
-    #status {
-      margin-bottom: 20px;
-      font-size: 1.2em;
-    }
-    #chat {
-      display: none;
-      width: 100%;
-      max-width: 500px;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    #messages {
-      height: 300px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-    #messages div {
-      margin-bottom: 8px;
-    }
-    #controls {
-      display: flex;
-      gap: 10px;
-    }
-    input {
-      flex: 1;
-      padding: 10px;
-    }
-    button {
-      padding: 10px;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ConnectChat - Anonymous 1-on-1 Chat Platform</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .hero {
+            padding: 120px 2rem 80px;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .features {
+            padding: 80px 2rem;
+            background: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                font-size: 16px;
+            }
+            
+            .header {
+                padding: 0.75rem 1rem;
+            }
+            
+            .nav-container {
+                padding: 0 1rem;
+            }
+            
+            .logo {
+                font-size: 1.25rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .hero {
+                padding: 100px 1rem 60px;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .hero p {
+                font-size: 1.125rem;
+                margin-bottom: 1.5rem;
+                padding: 0 0.5rem;
+            }
+            
+            .cta-button {
+                padding: 0.875rem 1.75rem;
+                font-size: 1rem;
+            }
+            
+            .features {
+                padding: 60px 1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+                margin-bottom: 2rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .feature-card {
+                padding: 1.5rem;
+            }
+            
+            .feature-icon {
+                font-size: 2.5rem;
+            }
+            
+            .feature-card h3 {
+                font-size: 1.25rem;
+            }
+            
+            .feature-card p {
+                font-size: 0.9375rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .features-grid {
+                gap: 1rem;
+            }
+            
+            .feature-card {
+                padding: 1.25rem;
+            }
+        }
+        
+        /* iOS-specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            .hero {
+                min-height: -webkit-fill-available;
+            }
+        }
+        
+        /* Touch-friendly improvements */
+        @media (hover: none) {
+            .cta-button:active {
+                transform: translateY(0);
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            }
+            
+            .feature-card:active {
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
-  <script>
-    const username = localStorage.getItem("chatUsername");
-    if (!username) {
-      window.location.replace("username.html");
-    }
-  </script>
-  <div id="status">Connecting...</div>
-  <div id="chat">
-    <div id="messages"></div>
-    <div id="controls">
-      <input id="input" autocomplete="off" placeholder="Type a message..." />
-      <button onclick="send()">Send</button>
-      <button onclick="skip()">Skip</button>
-    </div>
-  </div>
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">ConnectChat</div>
+            <ul class="nav-links">
+                <li><a href="/public/username.html">Start Chatting</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+        </div>
+    </header>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
-    let currentRoom = null;
-    const statusDiv = document.getElementById('status');
-    const chatDiv = document.getElementById('chat');
-    const messagesDiv = document.getElementById('messages');
-    const input = document.getElementById('input');
+    <section class="hero">
+        <h1>Connect with Strangers Anonymously</h1>
+        <p>Experience meaningful conversations with people from around the world. No registration required, just pure connection.</p>
+        <a href="/public/username.html" class="cta-button">Start Chatting Now</a>
+    </section>
 
-    socket.on('connect', () => {
-      statusDiv.textContent = 'Waiting for a partner...';
-    });
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose ConnectChat?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>100% Anonymous</h3>
+                    <p>No personal information required. Your privacy is our priority.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Instant Matching</h3>
+                    <p>Connect with new people in seconds. No waiting, just chatting.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Mobile Friendly</h3>
+                    <p>Works perfectly on all devices. Chat anywhere, anytime.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <h3>File Sharing</h3>
+                    <p>Share images and files securely during your conversations.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Global Community</h3>
+                    <p>Meet people from different cultures and backgrounds worldwide.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>24/7 Available</h3>
+                    <p>Always someone online to chat with, no matter the time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    socket.on('waiting', () => {
-      currentRoom = null;
-      chatDiv.style.display = 'none';
-      statusDiv.textContent = 'Waiting for a partner...';
-    });
-
-    socket.on('match', ({ room }) => {
-      currentRoom = room;
-      messagesDiv.innerHTML = '';
-      chatDiv.style.display = 'block';
-      statusDiv.textContent = 'You are now connected.';
-    });
-
-    socket.on('chat message', (msg) => {
-      const div = document.createElement('div');
-      div.textContent = `Stranger: ${msg}`;
-      messagesDiv.appendChild(div);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    });
-
-    socket.on('partner disconnected', () => {
-      currentRoom = null;
-      const div = document.createElement('div');
-      div.textContent = 'Partner disconnected.';
-      messagesDiv.appendChild(div);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      chatDiv.style.display = 'none';
-      statusDiv.textContent = 'Partner disconnected. Waiting for a new match...';
-    });
-
-    function send() {
-      if (!currentRoom) return;
-      const msg = input.value.trim();
-      if (!msg) return;
-      socket.emit('chat message', { room: currentRoom, msg });
-      const div = document.createElement('div');
-      div.textContent = `You: ${msg}`;
-      messagesDiv.appendChild(div);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      input.value = '';
-    }
-
-    function skip() {
-      socket.emit('skip');
-      chatDiv.style.display = 'none';
-      statusDiv.textContent = 'Skipping... finding a new match.';
-    }
-  </script>
+    <footer class="footer">
+        <p>&copy; 2024 ConnectChat. Built with ❤️ for meaningful connections.</p>
+    </footer>
 </body>
 </html>
